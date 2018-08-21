@@ -115,15 +115,14 @@ def test_lanenet(image_path, weights_path, use_gpu):
                 scale = 255 / ele_mex[i]
             instance_seg_image[0][:, :, i] *= int(scale)
         embedding_image = np.array(instance_seg_image[0], np.uint8)
-        # cv2.imwrite('embedding_mask.png', embedding_image)
 
-        # mask_image = cluster.get_lane_mask_v2(instance_seg_ret=embedding_image)
-        # mask_image = cv2.resize(mask_image, (image_vis.shape[1], image_vis.shape[0]),
+        #mask_image = cluster.get_lane_mask_v2(instance_seg_ret=embedding_image)
+        #mask_image = cv2.resize(mask_image, (image_vis.shape[1], image_vis.shape[0]),
         #                         interpolation=cv2.INTER_LINEAR)
-
+        cv2.imwrite('mask_image.png', mask_image)
         cv2.imwrite('binary_ret.png', binary_seg_image[0] * 255)
         cv2.imwrite('instance_ret.png', embedding_image)
-
+        """
         plt.figure('mask_image')
         plt.imshow(mask_image[:, :, (2, 1, 0)])
         plt.figure('src_image')
@@ -133,7 +132,7 @@ def test_lanenet(image_path, weights_path, use_gpu):
         plt.figure('binary_image')
         plt.imshow(binary_seg_image[0] * 255, cmap='gray')
         plt.show()
-
+        """
     sess.close()
 
     return

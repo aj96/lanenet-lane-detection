@@ -42,6 +42,8 @@ def init_args():
     parser.add_argument('--dataset_dir', type=str, help='The training dataset dir path')
     parser.add_argument('--net', type=str, help='Which base net work to use', default='vgg')
     parser.add_argument('--weights_path', type=str, help='The pretrained weights path')
+    parser.add_argument('--model_save_path', type=str, help='The directory you want to save your model and checkpoints to', default='./model/Adam_net')
+    
 
     return parser.parse_args()
 
@@ -115,7 +117,8 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
         os.makedirs(model_save_dir)
     train_start_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
     model_name = 'culane_lanenet_{:s}_{:s}.ckpt'.format(net_flag, str(train_start_time))
-    model_save_path = ops.join(model_save_dir, model_name)
+    model_save_path = ops.join(args.model_save_path, model_name)
+    #model_save_path = args.model_save_path
 
     # Set tf summary
     tboard_save_path = 'tboard/culane_lanenet/{:s}'.format(net_flag)
@@ -137,7 +140,7 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
                                              val_binary_seg_loss_scalar, val_instance_seg_loss_scalar])
 
     # Set sess configuration
-    sess_config = tf.ConfigProto(device_count={'GPU': 1})
+    sess_config = tf.ConfigProto(device_count={'GPU': CFG.TRAIN.NUM_GPU})
     sess_config.gpu_options.per_process_gpu_memory_fraction = CFG.TRAIN.GPU_MEMORY_FRACTION
     sess_config.gpu_options.allow_growth = CFG.TRAIN.TF_ALLOW_GROWTH
     sess_config.gpu_options.allocator_type = 'BFC'
@@ -293,6 +296,7 @@ def train_net(dataset_dir, weights_path=None, net_flag='vgg'):
                 val_cost_time_mean.clear()
 
             if epoch % 2000 == 0:
+                print("Model has been saved")
                 saver.save(sess=sess, save_path=model_save_path, global_step=epoch)
     sess.close()
 

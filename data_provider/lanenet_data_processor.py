@@ -12,7 +12,7 @@ import os.path as ops
 
 import cv2
 import numpy as np
-
+import matplotlib.pyplot as plt
 try:
     from cv2 import cv2
 except ImportError:
@@ -53,7 +53,6 @@ class DataSet(object):
                 gt_img_list.append(info_tmp[0])
                 gt_label_binary_list.append(info_tmp[1])
                 gt_label_instance_list.append(info_tmp[2])
-
         return gt_img_list, gt_label_binary_list, gt_label_instance_list
 
     def _random_dataset(self):
@@ -62,7 +61,6 @@ class DataSet(object):
         :return:
         """
         assert len(self._gt_img_list) == len(self._gt_label_binary_list) == len(self._gt_label_instance_list)
-
         random_idx = np.random.permutation(len(self._gt_img_list))
         new_gt_img_list = []
         new_gt_label_binary_list = []
@@ -83,12 +81,14 @@ class DataSet(object):
         :param batch_size:
         :return:
         """
+        
+        
         assert len(self._gt_label_binary_list) == len(self._gt_label_instance_list) \
                == len(self._gt_img_list)
 
         idx_start = batch_size * self._next_batch_loop_count
         idx_end = batch_size * self._next_batch_loop_count + batch_size
-
+        
         if idx_end > len(self._gt_label_binary_list):
             self._random_dataset()
             self._next_batch_loop_count = 0
@@ -106,14 +106,37 @@ class DataSet(object):
                 gt_imgs.append(cv2.imread(gt_img_path, cv2.IMREAD_COLOR))
 
             for gt_label_path in gt_label_binary_list:
+                """
+                # original way for tusimple dataset
                 label_img = cv2.imread(gt_label_path, cv2.IMREAD_COLOR)
                 label_binary = np.zeros([label_img.shape[0], label_img.shape[1]], dtype=np.uint8)
                 idx = np.where((label_img[:, :, :] != [0, 0, 0]).all(axis=2))
                 label_binary[idx] = 1
+                """
+                # how to read in data for culane after saving images using matplotlib.pyplot instead of opencv
+                label_img = plt.imread(gt_label_path)*255
+                label_img = label_img.astype(np.uint8)
+                label_img = np.concatenate((label_img[:,:,0].reshape(label_img.shape[0],label_img.shape[1],1), label_img[:,:,2:4]), axis=2)
+                label_binary = np.zeros_like(label_img[:,:,0])
+                label_binary[np.where((label_img[:, :, :] == [68, 84, 255]).all(axis=2))] = 1
+                label_binary = 1 - label_binary
+       
                 gt_labels_binary.append(label_binary)
 
             for gt_label_path in gt_label_instance_list:
+                """
+                # original way for tusimple dataset
                 label_img = cv2.imread(gt_label_path, cv2.IMREAD_UNCHANGED)
+                print("instance label_img.shape: ", label_img.shape)
+                print("label_img max: ", np.max(label_img))
+                print("label_img min: ", np.min(label_img))
+                print("label_img: ", label_img)
+                """
+                # how to read in data for culane after saving images using matplotlib.pyplot instead of opencv
+                label_img = cv2.imread(gt_label_path)
+                label_img = cv2.cvtColor(label_img, cv2.COLOR_BGR2GRAY)
+                label_img[label_img==np.min(label_img)] = 0
+                
                 gt_labels_instance.append(label_img)
 
             self._next_batch_loop_count += 1
